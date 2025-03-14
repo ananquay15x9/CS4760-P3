@@ -1,0 +1,84 @@
+// Author: Tu Le
+// CS4760 Project 3
+// Date:  3/13/2025
+
+#include <stdio.h>
+#include  <stdlib.h>
+#include <unistd.>
+#include <sys/types.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+#include <sys/wait.h>
+#include <errno.h>
+#include <getopt.h>
+#include <time.h>
+#include <signal.h>
+#include <sys/msg.h> 
+
+// Struct for the clock
+typedef struct {
+	int seconds;
+	int nanoseconds;
+} SimulatedClock;
+
+//The PCB struct
+typedef struct {
+	int occupied; // If empty 0, if occupied 1
+	pid_t pid; // Process ID of the child
+	int startSeconds; //Time when child launched will be in seconds
+	int startNano; 
+	int messagesSent; //Number of messages sent
+} PCB;
+
+// Message structures
+struct oss_message {
+	long mtype; //Message type (PID of the worker)
+	int command; //Command for the worker
+};
+
+struct worker_message {
+	long mtype; // Message type (PID of oss)
+	int status; // Status from the worker (e.g., 0 for continue, 1 for done)
+};
+
+// Global declarations 
+PCB processTable[20]; //Array
+int shmid;
+SimulatedClock *simClock;
+int  msgid; //Message queue ID
+
+//Signal handler function
+void signal_handler(int sig) {
+	if (sig == SIGALRM) {
+		printf("OSS: 60 seconds elapsed. Terminating all child processes.\n");
+	} else if (sig == SIGINT) {
+		printf("OSS: Ctrl+C received. Terminating all child processes.\n");
+	}
+	
+	//Terminate all child processes
+	for (int i = 0; i < 20; i++) {
+		if (processTable[i].occupied ==  1) {
+			kill(processTable[i].pid, SIGTERM);
+		}
+	}
+
+	// Detach shared memory
+	shmdt(simClock)
+	shmctl(shmid, IPC_RMID, NULL);
+
+	// Remove message queue
+	msgctl(msgid, IPC_RMID, NULL);
+
+	exit(0); //exit the program
+}
+
+int main(int argc, char **argv) {
+	int opt;
+	int num_children = 5;
+	int simul_children = 3;
+	int timelimitForChildren = 10; // Upper bound for child process time
+	int intervalInMsToLaunchChildren = 100; // interval for launching
+	int increment = 10000;
+	int children_running = 0; // Track running children
+	int last_printed_seconds = -1;
+	int last_lauch_time = 0; 
