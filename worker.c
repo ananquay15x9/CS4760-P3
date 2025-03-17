@@ -69,7 +69,7 @@ int main(int argc, char **argv) {
 	//print initial message
 	printf("WORKER PID: %d PPID: %d SysClockS: %d SysclockNano: %d TermTimeS: %d TermTimeNano: %d\n", getpid(), getppid(), simClock->seconds, simClock->nanoseconds, termination_seconds, termination_nanoseconds);
 	printf("--Just Starting\n");
-
+	fflush(stdout);
 	int iteration_count = 0;
 
 	// attach to message queue
@@ -94,6 +94,7 @@ int main(int argc, char **argv) {
 		if (simClock->seconds > termination_seconds || (simClock->seconds == termination_seconds && simClock->nanoseconds >= termination_nanoseconds)) {
 			printf("WORKER PID: %d PPID: %d SysClockS: %d SysclockNano: %d TermTimeS: %d TermTimeNano: %d\n", getpid(), getppid(), simClock->seconds, simClock->nanoseconds, termination_seconds, termination_nanoseconds);
 			printf("--Terminating after sending message back to oss after %d iterations.\n", iteration_count);
+			fflush(stdout);
 
 			//send termination message to oss
 			struct worker_message worker_msg;

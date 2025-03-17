@@ -46,7 +46,7 @@ PCB processTable[20]; //Array
 int shmid;
 SimulatedClock *simClock;
 int  msgid; //Message queue ID
-FILE *logfile; //logfile
+FILE *logfile; 
 
 //Signal handler function
 void signal_handler(int sig) {
@@ -69,6 +69,7 @@ void signal_handler(int sig) {
 
 	// Remove message queu
 	msgctl(msgid, IPC_RMID, NULL);
+
 	if(logfile != NULL) {
 		fclose(logfile);
 	}
@@ -86,7 +87,7 @@ int main(int argc, char **argv) {
 	int last_printed_seconds = -1;
 	int last_launch_time = 0; 
 	int next_process_index = 0;
-	char *logfilename = NULL; //log filename
+	char *logfilename = NULL; //for the log filename
 	// Command line argument parsing
 	while ((opt = getopt(argc, argv, "hn:s:t:i:")) != -1) {
 		switch (opt) {
@@ -109,12 +110,12 @@ int main(int argc, char **argv) {
 				logfilename = optarg;
 				break;
             		default:
-                		fprintf(stderr, "Usage: %s [-h] [-n proc] [-s simul] [-t timelimitForChildren] [-i intervalInMsToLaunchChildren] [-f logfile]\n", argv[0]);
+                		fprintf(stderr, "Usage: %s [-h] [-n proc] [-s simul] [-t timelimitForChildren] [-i intervalInMsToLaunchChildren]\n", argv[0]);
                			exit(1);
         	}
     	}
 
-	//Open log file
+	//open log file
 	if (logfilename != NULL) {
 		logfile = fopen(logfilename, "w");
 		if (logfile == NULL) {
@@ -122,6 +123,7 @@ int main(int argc, char **argv) {
 			exit(1);
 		}
 	}
+
 	// Initialize the process tale below
 	for (int i = 0; i < 20; i++) {
 		processTable[i].occupied = 0; // mark empty first
@@ -169,13 +171,6 @@ int main(int argc, char **argv) {
     	}
 
 	while(1) {
-		//Calculate the clock increment
-		if (children_runing > 0) {
-			increment = 250000000;
-		} else {
-			increment = 250000000; // if no children,  increment by 250ms
-		}
-
 		// increment the clock
 		simClock->nanoseconds += increment;
 
@@ -205,14 +200,14 @@ int main(int argc, char **argv) {
 		// output the process table every half a second
 		if (simClock->seconds != last_printed_seconds) {
 			last_printed_seconds = simClock->seconds; // update  the last printed secodns
-			fprintf(logfile != NULL ? logfile : stdout, "OSS PID: %d SysClockS: %d SysclockNano: %d\n", getpid(), simClock->seconds, simClock->nanoseconds);
-            		fprintf(logfile != NULL ? logfile : stdout, "Process Table:\n");
-            		fprintf(logfile != NULL ? logfile : stdout, "Entry\tOccupied\tPID\tStartS\tStartN\tMessages Sent\n");
-            		for (int i = 0; i < 20; i++) {
-                		fprintf(logfile != NULL ? logfile : stdout, "%d\t%d\t\t%d\t%d\t%d\t%d\n", i, processTable[i].occupied, processTable[i].pid, processTable[i].startSeconds, processTable[i].startNano, processTable[i].messagesSent);
-            		}
-			fprintf(logfile != NULL ? logfile : stdout, "\n");
-			fflush(logfile != NULL ? logfile : stdout); //flush output
+			printf("OSS PID: %d SysClockS: %d SysclockNano: %d\n", getpid(), simClock->seconds, simClock->nanoseconds);
+			printf("Process Table:\n");
+			printf("Entry\tOccupied\tPID\tStartS\tStartN\tMessages  Sent\n");
+			for (int i = 0; i < 20; i++) {
+				printf("%d\t%d\t\t%d\t%d\t%d\t%d\n", i, processTable[i].occupied, processTable[i].pid, processTable[i].startSeconds, processTable[i].startNano, processTable[i].messagesSent);
+			}
+			printf("\n");
+			fflush(stdout); //flush it out
 		}
 
 		// Launch new child if conditions are met
@@ -288,44 +283,11 @@ int main(int argc, char **argv) {
 	//Detach shared memory when done
 	shmdt(simClock);
 	// Clean up the shared memory segment
-  if (children_running > 0) {
-                        int process_index = next_process_index;
-                        int found_process = 0;
-                        for (int i = 0; i < 20; i++) {
-                                if (processTable[process_index].occupied == 1) {
-                                        found_process = 1;
-                                        break;
-                                }
-                                process_index = (process_index + 1) % 20;
-                        }
-                        if (found_process) {
-                                struct oss_message oss_msg;
-                                oss_msg.mtype = processTable[next_process_index].pid;
-                                oss_msg.command = 1; // Signal to continue
-
-                                if (msgsnd(msgid, &oss_msg, sizeof(oss_msg) - sizeof(long), 0) == -1) {
-                                        perror("msgsnd failed");
-                                } else {
-                                        processTable[next_process_index].messagesSent++;
-                                }
-
-                                // Receive message from worker
-                                struct  worker_message worker_msg;
-                                if (msgrcv(msgid, &worker_msg, sizeof(worker_msg) - sizeof(long), getpid(), 0) == -1) {
-                                        perror("msgrcv failed");
-                                }
-
-                                next_process_index = (next_process_index + 1) % 20; // Move to the next process
-                        }
-                }
-        } // end of while loop
-
-        //Detach shared memory when done
-        shmdt(simClock);
 	shmctl(shmid, IPC_RMID, NULL);
 	// Remove Message queue
 	msgctl(msgid, IPC_RMID, NULL);
-	if(logfile != NULL) {
+	// clean logfile
+	if(logfile !=  NULL) {
 		fclose(logfile);
 	}
 	return 0;
