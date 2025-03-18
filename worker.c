@@ -109,9 +109,9 @@ int main(int argc, char **argv) {
 			if (msgsnd(msgid, &worker_msg, sizeof(worker_msg) - sizeof(long), 0) == -1) {
 				perror("msgsnd (termination) failed");
             		}
-			//close message queue from worker side
-			printf("Worker %d: Closing message queue.\n", getpid());
-			msgctl(msgid, IPC_RMID, NULL);
+
+			//clean up and exit
+			shmdt(simClock);
 			exit(0); // Terminate the worker
             		//break; //exit the loop
         	}

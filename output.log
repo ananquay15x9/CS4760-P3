@@ -1,8 +1,155 @@
-WORKER PID: 292911 PPID: 292910 SysClockS: 0 SysclockNano: 500000000 TermTimeS: 4 TermTimeNano: 96455158
---Just Starting
-Worker 292911: msgid = 294916
-Worker 292911: Expecting mtype = 292911
-WORKER PID: 292911 PPID: 292910 SysClockS: 0 SysclockNano: 500000000 TermTimeS: 4 TermTimeNano: 96455158
---1 iterations have passed since it started
-OSS: 60 seconds elapsed. Terminating all child processes.
-OSS: Signal handler called, children_running = 0
+OSS: msgid = 360460
+OSS PID: 366001 SysClockS: 0 SysclockNano: 250000000
+Process Table:
+Entry	Occupied	PID	StartS	StartN	Messages Sent
+0	0		0	0	0	0
+1	0		0	0	0	0
+2	0		0	0	0	0
+3	0		0	0	0	0
+4	0		0	0	0	0
+5	0		0	0	0	0
+6	0		0	0	0	0
+7	0		0	0	0	0
+8	0		0	0	0	0
+9	0		0	0	0	0
+10	0		0	0	0	0
+11	0		0	0	0	0
+12	0		0	0	0	0
+13	0		0	0	0	0
+14	0		0	0	0	0
+15	0		0	0	0	0
+16	0		0	0	0	0
+17	0		0	0	0	0
+18	0		0	0	0	0
+19	0		0	0	0	0
+
+OSS: Sending message to worker 0 PID 366002 at time 0:250000000
+OSS: Receiving message from worker 0 PID 366002 at time 0:250000000
+OSS: Sending message to worker 1 PID 366003 at time 0:500000000
+OSS: Receiving message from worker 1 PID 366003 at time 0:500000000
+OSS: Sending message to worker 0 PID 366002 at time 0:750000000
+OSS: Receiving message from worker 0 PID 366002 at time 0:750000000
+OSS PID: 366001 SysClockS: 1 SysclockNano: 0
+Process Table:
+Entry	Occupied	PID	StartS	StartN	Messages Sent
+0	1		366002	0	250000000	2
+1	1		366003	0	500000000	1
+2	0		0	0	0	0
+3	0		0	0	0	0
+4	0		0	0	0	0
+5	0		0	0	0	0
+6	0		0	0	0	0
+7	0		0	0	0	0
+8	0		0	0	0	0
+9	0		0	0	0	0
+10	0		0	0	0	0
+11	0		0	0	0	0
+12	0		0	0	0	0
+13	0		0	0	0	0
+14	0		0	0	0	0
+15	0		0	0	0	0
+16	0		0	0	0	0
+17	0		0	0	0	0
+18	0		0	0	0	0
+19	0		0	0	0	0
+
+OSS: Sending message to worker 1 PID 366003 at time 1:0
+OSS: Receiving message from worker 1 PID 366003 at time 1:0
+OSS: Sending message to worker 0 PID 366002 at time 1:250000000
+OSS: Receiving message from worker 0 PID 366002 at time 1:250000000
+OSS: Sending message to worker 1 PID 366003 at time 1:500000000
+OSS: Receiving message from worker 1 PID 366003 at time 1:500000000
+OSS: Sending message to worker 0 PID 366002 at time 1:750000000
+OSS: Receiving message from worker 0 PID 366002 at time 1:750000000
+OSS PID: 366001 SysClockS: 2 SysclockNano: 0
+Process Table:
+Entry	Occupied	PID	StartS	StartN	Messages Sent
+0	1		366002	0	250000000	4
+1	1		366003	0	500000000	3
+2	0		0	0	0	0
+3	0		0	0	0	0
+4	0		0	0	0	0
+5	0		0	0	0	0
+6	0		0	0	0	0
+7	0		0	0	0	0
+8	0		0	0	0	0
+9	0		0	0	0	0
+10	0		0	0	0	0
+11	0		0	0	0	0
+12	0		0	0	0	0
+13	0		0	0	0	0
+14	0		0	0	0	0
+15	0		0	0	0	0
+16	0		0	0	0	0
+17	0		0	0	0	0
+18	0		0	0	0	0
+19	0		0	0	0	0
+
+OSS: Sending message to worker 1 PID 366003 at time 2:0
+OSS: Receiving message from worker 1 PID 366003 at time 2:0
+OSS: Sending message to worker 0 PID 366002 at time 2:250000000
+OSS: Receiving message from worker 0 PID 366002 at time 2:250000000
+OSS: Sending message to worker 1 PID 366003 at time 2:500000000
+OSS: Receiving message from worker 1 PID 366003 at time 2:500000000
+OSS: Sending message to worker 0 PID 366002 at time 2:750000000
+OSS: Receiving message from worker 0 PID 366002 at time 2:750000000
+OSS PID: 366001 SysClockS: 3 SysclockNano: 0
+Process Table:
+Entry	Occupied	PID	StartS	StartN	Messages Sent
+0	1		366002	0	250000000	6
+1	1		366003	0	500000000	5
+2	0		0	0	0	0
+3	0		0	0	0	0
+4	0		0	0	0	0
+5	0		0	0	0	0
+6	0		0	0	0	0
+7	0		0	0	0	0
+8	0		0	0	0	0
+9	0		0	0	0	0
+10	0		0	0	0	0
+11	0		0	0	0	0
+12	0		0	0	0	0
+13	0		0	0	0	0
+14	0		0	0	0	0
+15	0		0	0	0	0
+16	0		0	0	0	0
+17	0		0	0	0	0
+18	0		0	0	0	0
+19	0		0	0	0	0
+
+OSS: Sending message to worker 1 PID 366003 at time 3:0
+OSS: Receiving message from worker 1 PID 366003 at time 3:0
+OSS: Sending message to worker 0 PID 366002 at time 3:250000000
+OSS: Receiving message from worker 0 PID 366002 at time 3:250000000
+OSS: Sending message to worker 1 PID 366003 at time 3:500000000
+OSS: Receiving message from worker 1 PID 366003 at time 3:500000000
+OSS: Sending message to worker 0 PID 366002 at time 3:750000000
+OSS: Receiving message from worker 0 PID 366002 at time 3:750000000
+OSS: Worker 0 PID 366002 is terminating.
+OSS PID: 366001 SysClockS: 4 SysclockNano: 0
+Process Table:
+Entry	Occupied	PID	StartS	StartN	Messages Sent
+0	1		366002	0	250000000	8
+1	1		366003	0	500000000	7
+2	0		0	0	0	0
+3	0		0	0	0	0
+4	0		0	0	0	0
+5	0		0	0	0	0
+6	0		0	0	0	0
+7	0		0	0	0	0
+8	0		0	0	0	0
+9	0		0	0	0	0
+10	0		0	0	0	0
+11	0		0	0	0	0
+12	0		0	0	0	0
+13	0		0	0	0	0
+14	0		0	0	0	0
+15	0		0	0	0	0
+16	0		0	0	0	0
+17	0		0	0	0	0
+18	0		0	0	0	0
+19	0		0	0	0	0
+
+OSS: Sending message to worker 1 PID 366003 at time 4:0
+OSS: Receiving message from worker 1 PID 366003 at time 4:0
+OSS: Sending message to worker 0 PID 366002 at time 4:250000000
