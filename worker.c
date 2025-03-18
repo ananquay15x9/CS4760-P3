@@ -84,12 +84,16 @@ int main(int argc, char **argv) {
 	while (1) {
 		// receive message from oss
 		struct oss_message oss_msg;
+		printf("Worker %d: Expecting mtype = %d\n", getpid(), getpid());
         	if (msgrcv(msgid, &oss_msg, sizeof(oss_msg) - sizeof(long), getpid(), 0) == -1) {
 			perror("msgrcv failed");
 			break;
 		}
 
 		iteration_count++;
+
+		//debugging
+		printf("Worker %d: Current time %d:%d, Term time %d:%d\n", getpid(), simClock->seconds, simClock->nanoseconds, termination_seconds, termination_nanoseconds);
 
 		//check termination
 		if (simClock->seconds > termination_seconds || (simClock->seconds == termination_seconds && simClock->nanoseconds >= termination_nanoseconds)) {
@@ -99,12 +103,17 @@ int main(int argc, char **argv) {
 
 			//send termination message to oss
 			struct worker_message worker_msg;
-			worker_msg.mtype = getppid();
+			worker_msg.mtype = getppid(); //OSS's PID
 			worker_msg.status = 1; // Done
+			printf("Worker %d: Sending termination message to OSS\n", getpid());
 			if (msgsnd(msgid, &worker_msg, sizeof(worker_msg) - sizeof(long), 0) == -1) {
-				perror("msgsnd failed");
+				perror("msgsnd (termination) failed");
             		}
-            		break; //exit the loop
+			//close message queue from worker side
+			printf("Worker %d: Closing message queue.\n", getpid());
+			msgctl(msgid, IPC_RMID, NULL);
+			exit(0); // Terminate the worker
+            		//break; //exit the loop
         	}
 
 		//periodic output
@@ -116,6 +125,7 @@ int main(int argc, char **argv) {
 		struct worker_message worker_msg;
 		worker_msg.mtype = getppid();
 		worker_msg.status = 0; // Continue
+		printf("Worker %d: Sending mtype = %ld\n", getpid(), worker_msg.mtype);		
 		if (msgsnd(msgid, &worker_msg, sizeof(worker_msg) - sizeof(long), 0) == -1) {
 			perror("msgsnd failed");
 			break;

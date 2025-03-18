@@ -1,0 +1,8 @@
+WORKER PID: 292911 PPID: 292910 SysClockS: 0 SysclockNano: 500000000 TermTimeS: 4 TermTimeNano: 96455158
+--Just Starting
+Worker 292911: msgid = 294916
+Worker 292911: Expecting mtype = 292911
+WORKER PID: 292911 PPID: 292910 SysClockS: 0 SysclockNano: 500000000 TermTimeS: 4 TermTimeNano: 96455158
+--1 iterations have passed since it started
+OSS: 60 seconds elapsed. Terminating all child processes.
+OSS: Signal handler called, children_running = 0

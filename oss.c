@@ -49,6 +49,8 @@ int  msgid; //Message queue ID
 FILE *logfile; //logfile
 int total_processes_launched = 0;
 int total_messages_sent = 0;
+int workers_completed = 0;
+int children_running = 0;
 
 //Signal handler function
 void signal_handler(int sig) {
@@ -64,17 +66,20 @@ void signal_handler(int sig) {
 			kill(processTable[i].pid, SIGTERM); // Send termination signal to children
 		}
 	}
+	printf("OSS: Signal handler called, children_running = %d\n", children_running); 
+    	if(children_running == 0){
 
-	// Detach shared memory
-	shmdt(simClock);
-	shmctl(shmid, IPC_RMID, NULL);
+		// Detach shared memory
+		shmdt(simClock);
+		shmctl(shmid, IPC_RMID, NULL);
 
-	// Remove message queu
-	msgctl(msgid, IPC_RMID, NULL);
-	if(logfile != NULL) {
-		fclose(logfile);
+		// Remove message queu
+		msgctl(msgid, IPC_RMID, NULL);
+		if(logfile != NULL) {
+			fclose(logfile);
+		}
+		exit(0); //exit the program
 	}
-	exit(0); //exit the program
 }
 
 int main(int argc, char **argv) {
@@ -292,6 +297,7 @@ int main(int argc, char **argv) {
                                                         processTable[j].startSeconds = simClock->seconds;
                                                         processTable[j].startNano = simClock->nanoseconds;
                                                         children_running++;
+							printf("OSS: Child launched, children_running = %d\n", children_running);
                                                         //output process table after launch
                                                         fprintf(logfile != NULL ? logfile : stdout, "OSS PID: %d SysClockS: %d SysclockNano: %d\n", getpid(), simClock->seconds, simClock->nanoseconds);
                                                         fprintf(logfile != NULL ? logfile : stdout, "Process Table:\n");
@@ -327,6 +333,7 @@ int main(int argc, char **argv) {
                 		oss_msg.command = 1; // Signal to continue
 
 				fprintf(logfile != NULL ? logfile : stdout, "OSS: Sending message to worker %d PID %d at time %d:%d\n", next_process_index, processTable[next_process_index].pid, simClock->seconds, simClock->nanoseconds);
+				printf("OSS: Sending message to worker %d PID %d at time %d:%d\n", next_process_index, processTable[next_process_index].pid, simClock->seconds, simClock->nanoseconds);
 
 		                if (msgsnd(msgid, &oss_msg, sizeof(oss_msg) - sizeof(long), 0) == -1) {
                     			perror("msgsnd failed");
@@ -340,6 +347,12 @@ int main(int argc, char **argv) {
 					perror("msgrcv failed");
 				}
 				fprintf(logfile != NULL ? logfile : stdout, "OSS: Receiving message from worker %d PID %d at time %d:%d\n", next_process_index, processTable[next_process_index].pid, simClock->seconds, simClock->nanoseconds);
+			
+				if (worker_msg.status == 1) {
+				        fprintf(logfile != NULL ? logfile : stdout, "OSS: Worker %d PID %d is terminating.\n", next_process_index, processTable[next_process_index].pid);
+        				workers_completed++;
+					printf("OSS: workers_completed = %d\n", workers_completed);
+    				}
 		
 				if (worker_msg.status == 1) {
 					fprintf(logfile != NULL ? logfile : stdout, "OSS: Worker %d PID %d is planning to terminate.\n", next_process_index, processTable[next_process_index].pid);
@@ -365,7 +378,10 @@ int main(int argc, char **argv) {
         //Detach shared memory when done
 	shmctl(shmid, IPC_RMID, NULL);
 	// Remove Message queue
-	msgctl(msgid, IPC_RMID, NULL);
+	if(workers_completed >= total_processes_launched) {
+		msgctl(msgid, IPC_RMID, NULL);
+	}
+
 	if(logfile != NULL) {
 		fclose(logfile);
 	}
