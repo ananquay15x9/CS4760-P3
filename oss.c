@@ -68,7 +68,7 @@ void signal_handler(int sig) {
 		}
 	}
 	printf("OSS: Signal handler called, children_running = %d\n", children_running); 
-    		if(children_running == 0){
+    	if(children_running == 0){
 
 		// Detach shared memory
 		shmdt(simClock);
@@ -95,6 +95,7 @@ int main(int argc, char **argv) {
 	int last_launch_time = 0; 
 	int next_process_index = 0;
 	char *logfilename = NULL; //log filename
+	oss_pid = getpid();
 	// Command line argument parsing
 	while ((opt = getopt(argc, argv, "hn:s:t:i:f:")) != -1) {
 		switch (opt) {
