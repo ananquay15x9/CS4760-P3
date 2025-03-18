@@ -3,7 +3,7 @@
 // Date:  3/13/2025
 
 #include <stdio.h>
-#include  <stdlib.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/ipc.h>
@@ -47,6 +47,8 @@ int shmid;
 SimulatedClock *simClock;
 int  msgid; //Message queue ID
 FILE *logfile; //logfile
+int total_processes_launched = 0;
+int total_messages_sent = 0;
 
 //Signal handler function
 void signal_handler(int sig) {
@@ -88,7 +90,7 @@ int main(int argc, char **argv) {
 	int next_process_index = 0;
 	char *logfilename = NULL; //log filename
 	// Command line argument parsing
-	while ((opt = getopt(argc, argv, "hn:s:t:i:")) != -1) {
+	while ((opt = getopt(argc, argv, "hn:s:t:i:f:")) != -1) {
 		switch (opt) {
 			case  'h': //this is help option
 				printf("Usage: %s [-h] [-n proc] [-s simul] [-t timelimitForChildren] [-i intervalInMsToLaunchChildren]\n", argv[0]);
@@ -164,13 +166,14 @@ int main(int argc, char **argv) {
     	// create message queue
     	msgid = msgget(key, IPC_CREAT | 0666);
     	if (msgid == -1) {
-        	perror("msgget");
+        	perror("msgget in oss");
         	exit(1);
     	}
+	fprintf(logfile != NULL ? logfile : stdout, "OSS: msgid = %d\n", msgid);//print statement
 
 	while(1) {
 		//Calculate the clock increment
-		if (children_runing > 0) {
+		if (children_running > 0) {
 			increment = 250000000;
 		} else {
 			increment = 250000000; // if no children,  increment by 250ms
@@ -242,6 +245,15 @@ int main(int argc, char **argv) {
                             				processTable[j].startSeconds = simClock->seconds;
                             				processTable[j].startNano = simClock->nanoseconds;
                             				children_running++;
+                            				//output process table after launch
+							fprintf(logfile != NULL ? logfile : stdout, "OSS PID: %d SysClockS: %d SysclockNano: %d\n", getpid(), simClock->seconds, simClock->nanoseconds);
+                            				fprintf(logfile != NULL ? logfile : stdout, "Process Table:\n");
+                            				fprintf(logfile != NULL ? logfile : stdout, "Entry\tOccupied\tPID\tStartS\tStartN\tMessages Sent\n");
+                            				for (int i = 0; i < 20; i++) {
+                                				fprintf(logfile != NULL ? logfile : stdout, "%d\t%d\t\t%d\t%d\t%d\t%d\n", i, processTable[i].occupied, processTable[i].pid, processTable[i].startSeconds, processTable[i].startNano, processTable[i].messagesSent);
+                            				}
+                            				fprintf(logfile != NULL ? logfile : stdout, "\n");
+                            				fflush(logfile != NULL ? logfile : stdout);
                             				break;
 						}
 					}
@@ -252,7 +264,53 @@ int main(int argc, char **argv) {
 			}
 		}
 		
-		// Send messages to worker processes in a round-robin fashion
+		// Send messages to worker processes in      // Launch new child if conditions are met
+                if (children_running < simul_children) {
+                        int current_time_ms = (simClock->seconds * 1000) + (simClock->nanoseconds / 1000000);
+                        if (current_time_ms - last_launch_time >= intervalInMsToLaunchChildren) {
+                                last_launch_time = current_time_ms;
+
+                                //Generate random time limties for the worker
+                                int max_seconds = rand() % timelimitForChildren + 1;
+                                int max_nanoseconds = rand() % 1000000000;
+
+                                pid_t pid = fork();
+                                if (pid == 0) {
+                                        char max_seconds_str[20];
+                                        char max_nanoseconds_str[20];
+                                        sprintf(max_seconds_str, "%d", max_seconds);
+                                        sprintf(max_nanoseconds_str, "%d", max_nanoseconds);
+                                        execl("./worker", "worker", max_seconds_str, max_nanoseconds_str, NULL);
+                                        perror("execl failed");
+                                        exit(1);
+                                } else if (pid > 0) {
+					total_processes_launched++; //Increment here
+                                        for  (int j = 0; j < 20; j++) {
+                                                if (processTable[j].occupied == 0) {
+                                                        processTable[j].occupied = 1;
+                                                        processTable[j].pid = pid;
+                                                        processTable[j].startSeconds = simClock->seconds;
+                                                        processTable[j].startNano = simClock->nanoseconds;
+                                                        children_running++;
+                                                        //output process table after launch
+                                                        fprintf(logfile != NULL ? logfile : stdout, "OSS PID: %d SysClockS: %d SysclockNano: %d\n", getpid(), simClock->seconds, simClock->nanoseconds);
+                                                        fprintf(logfile != NULL ? logfile : stdout, "Process Table:\n");
+                                                        fprintf(logfile != NULL ? logfile : stdout, "Entry\tOccupied\tPID\tStartS\tStartN\tMessages Sent\n");
+                                                        for (int i = 0; i < 20; i++) {
+                                                                fprintf(logfile != NULL ? logfile : stdout, "%d\t%d\t\t%d\t%d\t%d\t%d\n", i, processTable[i].occupied, processTable[i].pid, processTable[i].startSeconds, processTable[i].startNano, processTable[i].messagesSent);
+                                                        }
+                                                        fprintf(logfile != NULL ? logfile : stdout, "\n");
+                                                        fflush(logfile != NULL ? logfile : stdout);
+                                                        break;
+                                                }
+                                        }
+                                } else { // fork has failed
+                                        perror("fork failed");
+                                        exit(1);
+                                }
+                        }
+                }
+		//Send messages to worker processes in round-robin fashion
         	if (children_running > 0) {
             		int process_index = next_process_index;
             		int found_process = 0;
@@ -268,6 +326,8 @@ int main(int argc, char **argv) {
 				oss_msg.mtype = processTable[next_process_index].pid;
                 		oss_msg.command = 1; // Signal to continue
 
+				fprintf(logfile != NULL ? logfile : stdout, "OSS: Sending message to worker %d PID %d at time %d:%d\n", next_process_index, processTable[next_process_index].pid, simClock->seconds, simClock->nanoseconds);
+
 		                if (msgsnd(msgid, &oss_msg, sizeof(oss_msg) - sizeof(long), 0) == -1) {
                     			perror("msgsnd failed");
                 		} else {
@@ -279,49 +339,30 @@ int main(int argc, char **argv) {
 				if (msgrcv(msgid, &worker_msg, sizeof(worker_msg) - sizeof(long), getpid(), 0) == -1) {
 					perror("msgrcv failed");
 				}
+				fprintf(logfile != NULL ? logfile : stdout, "OSS: Receiving message from worker %d PID %d at time %d:%d\n", next_process_index, processTable[next_process_index].pid, simClock->seconds, simClock->nanoseconds);
+		
+				if (worker_msg.status == 1) {
+					fprintf(logfile != NULL ? logfile : stdout, "OSS: Worker %d PID %d is planning to terminate.\n", next_process_index, processTable[next_process_index].pid);
+				}
 
 				next_process_index = (next_process_index + 1) % 20; // Move to the next process
 			}
 		}
+
+		//Check termination
+		if (children_running == 0 && total_processes_launched >= num_children) {
+			break;
+		}
 	} // end of while loop
 
+	//Ending output here
+	fprintf(logfile != NULL ? logfile : stdout, "OSS: Total processes launched: %d\n", total_processes_launched);
+    	fprintf(logfile != NULL ? logfile : stdout, "OSS: Total messages sent: %d\n", total_messages_sent);
+	
 	//Detach shared memory when done
 	shmdt(simClock);
 	// Clean up the shared memory segment
-  if (children_running > 0) {
-                        int process_index = next_process_index;
-                        int found_process = 0;
-                        for (int i = 0; i < 20; i++) {
-                                if (processTable[process_index].occupied == 1) {
-                                        found_process = 1;
-                                        break;
-                                }
-                                process_index = (process_index + 1) % 20;
-                        }
-                        if (found_process) {
-                                struct oss_message oss_msg;
-                                oss_msg.mtype = processTable[next_process_index].pid;
-                                oss_msg.command = 1; // Signal to continue
-
-                                if (msgsnd(msgid, &oss_msg, sizeof(oss_msg) - sizeof(long), 0) == -1) {
-                                        perror("msgsnd failed");
-                                } else {
-                                        processTable[next_process_index].messagesSent++;
-                                }
-
-                                // Receive message from worker
-                                struct  worker_message worker_msg;
-                                if (msgrcv(msgid, &worker_msg, sizeof(worker_msg) - sizeof(long), getpid(), 0) == -1) {
-                                        perror("msgrcv failed");
-                                }
-
-                                next_process_index = (next_process_index + 1) % 20; // Move to the next process
-                        }
-                }
-        } // end of while loop
-
         //Detach shared memory when done
-        shmdt(simClock);
 	shmctl(shmid, IPC_RMID, NULL);
 	// Remove Message queue
 	msgctl(msgid, IPC_RMID, NULL);

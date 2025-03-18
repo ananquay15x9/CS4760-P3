@@ -75,9 +75,10 @@ int main(int argc, char **argv) {
 	// attach to message queue
 	int msgid = msgget(key, 0666);
 	if (msgid == -1) {
-		perror("msgget");
+		perror("msgget in worker");
 		exit(1);
 	}
+	printf("Worker %d: msgid = %d\n", getpid(), msgid);//add  print statement
 
 	// main loop
 	while (1) {
