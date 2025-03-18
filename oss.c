@@ -208,6 +208,9 @@ int main(int argc, char **argv) {
 					break;
 				}
 			}
+			if (WIFEXITED(status) || WIFSIGNALED(status)) { //add this if statement.
+                		printf("OSS: Child exited, children_running = %d\n", children_running); 
+            		}
 		}
 
 		// output the process table every half a second
