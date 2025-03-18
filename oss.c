@@ -289,54 +289,54 @@ int main(int argc, char **argv) {
             		int process_index = next_process_index;
             		int attempts = 0;
 
-		// find next valid process
-		while (attempts < 20) {
-			if (processTable[process_index].occupied == 1 && processTable[process_index].pid > 0) {
-				//found valid process
-				struct oss_message oss_msg;
-				oss_msg.mtype = processTable[process_index].pid;
-				oss_msg.command = 1;
+			// find next valid process
+			while (attempts < 20) {
+				if (processTable[process_index].occupied == 1 && processTable[process_index].pid > 0) {
+					//found valid process
+					struct oss_message oss_msg;
+					oss_msg.mtype = processTable[process_index].pid;
+					oss_msg.command = 1;
 
-				fprintf(logfile != NULL ? logfile : stdout, "OSS: Sending message to worker %d PID %d at time %d:%d\n",
-					process_index, processTable[process_index].pid, simClock->seconds, simClock->nanoseconds);
+					fprintf(logfile != NULL ? logfile : stdout, "OSS: Sending message to worker %d PID %d at time %d:%d\n", process_index, processTable[process_index].pid, simClock->seconds, simClock->nanoseconds);
 
-				if (msgsnd(msgid, &oss_msg, sizeof(oss_msg) - sizeof(long), 0) == -1) {
-					perror("msgsnd failed");
-				} else {
-					processTable[process_index].messagesSent++;
-				} 
-				break;
+					if (msgsnd(msgid, &oss_msg, sizeof(oss_msg) - sizeof(long), 0) == -1) {
+						perror("msgsnd failed");
+					} else {
+						processTable[process_index].messagesSent++;
+					} 
+					break;
+				}
+				process_index = (process_index + 1) % 20;
+				attempts++;
 			}
-			process_index = (process_index + 1) % 20;
-			attempts++;
-		}
-		next_process_index = (process_index + 1) % 20;
+			next_process_index = (process_index + 1) % 20;
 
-		// Receive message from worker
-		struct worker_message worker_msg;
-		if (msgrcv(msgid, &worker_msg, sizeof(worker_msg) - sizeof(long), oss_pid, 0) == -1) {
-			perror("msgrcv failed");
-			// Add detailed error handling using errno (as previously discussed)
-    			if (errno == EIDRM) {
-        			fprintf(stderr, "OSS: Message queue was removed.\n");
-    			} else if (errno == EINVAL) {
-        			fprintf(stderr, "OSS: Invalid argument to msgrcv (e.g., invalid msgid or mtype).\n");
-    			} else if (errno == ENOMSG) {
-        			fprintf(stderr, "OSS: No message of the desired type was available.\n");
-    			} else if (errno == EACCES) {
-        			fprintf(stderr, "OSS: Permission denied to receive message.\n");
-    			} else {
-        			fprintf(stderr, "OSS: msgrcv failed with unknown error: %d\n", errno);
-    			}
-		} else {
-			fprintf(logfile != NULL ? logfile : stdout, "OSS: Receiving message from worker %d PID %d at time %d:%d\n", process_index, processTable[process_index].pid, simClock->seconds, simClock->nanoseconds);
-			if (worker_msg.status == 1) {
-				fprintf(logfile != NULL ? logfile : stdout, "OSS: Worker %d PID %d is terminating.\n", process_index, processTable[process_index].pid);
-				workers_completed++;
-				printf("OSS: workers_completed = %d\n", workers_completed);
+			// Receive message from worker
+			struct worker_message worker_msg;
+			if (msgrcv(msgid, &worker_msg, sizeof(worker_msg) - sizeof(long), oss_pid, 0) == -1) {
+				perror("msgrcv failed");
+				// Add detailed error handling using errno (as previously discussed)
+    				if (errno == EIDRM) {
+        				fprintf(stderr, "OSS: Message queue was removed.\n");
+    				} else if (errno == EINVAL) {
+        				fprintf(stderr, "OSS: Invalid argument to msgrcv (e.g., invalid msgid or mtype).\n");
+    				} else if (errno == ENOMSG) {
+        				fprintf(stderr, "OSS: No message of the desired type was available.\n");
+    				} else if (errno == EACCES) {
+        				fprintf(stderr, "OSS: Permission denied to receive message.\n");
+    				} else {
+        				fprintf(stderr, "OSS: msgrcv failed with unknown error: %d\n", errno);
+    				}
+			} else {
+				fprintf(logfile != NULL ? logfile : stdout, "OSS: Receiving message from worker %d PID %d at time %d:%d\n", process_index, processTable[process_index].pid, simClock->seconds, simClock->nanoseconds);
+				if (worker_msg.status == 1) {
+					fprintf(logfile != NULL ? logfile : stdout, "OSS: Worker %d PID %d is terminating.\n", process_index, processTable[process_index].pid);
+					workers_completed++;
+					printf("OSS: workers_completed = %d\n", workers_completed);
+				}
+				//add debug print statement
+    				fprintf(stderr, "OSS: message recieved, mtype = %ld, status = %d\n", worker_msg.mtype, worker_msg.status);
 			}
-			//add debug print statement
-    			fprintf(stderr, "OSS: message recieved, mtype = %ld, status = %d\n", worker_msg.mtype, worker_msg.status);
 		}
 
 		//Check termination
