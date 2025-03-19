@@ -20,17 +20,16 @@ typedef struct {
 // Message structures
 struct oss_message {
 	long mtype; // Message type (PID of the worker)
-	int command; // Command for the worker (e.g., 1 for continue)
+	int command; // Command for the worker
 };
 
 struct worker_message {
 	long mtype; // Message type (PID of oss)
-	int status; // Status from the worker (e.g., 0 for continue, 1 for done)
+	int status; // Status from the worker 
 };
 
 int main(int argc, char **argv) {
-	printf("Worker: Received args: %s %s %s\n", argv[1], argv[2], argv[3]); // Add this line
-
+	printf("Worker: Received args: %s %s %s\n", argv[1], argv[2], argv[3]); 
 	if (argc != 4) {
 		fprintf(stderr, "Usage: %s <max_seconds> <max_nanoseconds> <oss_pid>\n", argv[0]);
 		exit(1);
@@ -41,7 +40,7 @@ int main(int argc, char **argv) {
 	int max_nanoseconds = atoi(argv[2]);
 	pid_t oss_pid = atoi(argv[3]); // Get OSS PID from argument
 
-	printf("Worker: Converted args: max_seconds=%d, max_nanoseconds=%d, oss_pid=%d\n", max_seconds, max_nanoseconds, oss_pid); // Add this line
+	printf("Worker: Converted args: max_seconds=%d, max_nanoseconds=%d, oss_pid=%d\n", max_seconds, max_nanoseconds, oss_pid); 
 
 	//Shared memory setup
 	key_t key = ftok("oss.c", 1); // use the same key as oss.c
@@ -94,7 +93,7 @@ int main(int argc, char **argv) {
 			perror("msgrcv failed");
 			break;
 		}
-		printf("Worker %d: Received message with mtype = %ld\n", getpid(), oss_msg.mtype); //add this line.
+		printf("Worker %d: Received message with mtype = %ld\n", getpid(), oss_msg.mtype); 
 
 
 		iteration_count++;
@@ -113,7 +112,7 @@ int main(int argc, char **argv) {
 			worker_msg.mtype = getppid(); //OSS's PID
 			worker_msg.status = 1; // Done
 			printf("Worker %d: Sending termination message to OSS\n", getpid());
-			printf("Worker %d: Sending mtype = %ld\n", getpid(), worker_msg.mtype); //add this line.
+			printf("Worker %d: Sending mtype = %ld\n", getpid(), worker_msg.mtype); 
 
 			if (msgsnd(msgid, &worker_msg, sizeof(worker_msg) - sizeof(long), 0) == -1) {
 				perror("msgsnd (termination) failed");

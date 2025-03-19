@@ -210,7 +210,7 @@ int main(int argc, char **argv) {
 					break;
 				}
 			}
-			if (WIFEXITED(status) || WIFSIGNALED(status)) { //add this if statement.
+			if (WIFEXITED(status) || WIFSIGNALED(status)) { //this if statement.
                 		printf("OSS: Child exited, children_running = %d\n", children_running); 
             		}
 		}
@@ -247,7 +247,7 @@ int main(int argc, char **argv) {
 					sprintf(max_seconds_str, "%d", max_seconds);
 					sprintf(max_nanoseconds_str, "%d", max_nanoseconds);
 					sprintf(oss_pid_str, "%d", oss_pid); // Convert OSS PID to string
-					printf("OSS: Executing worker with args: %s %s %s\n", max_seconds_str, max_nanoseconds_str, oss_pid_str); // Add this line
+					printf("OSS: Executing worker with args: %s %s %s\n", max_seconds_str, max_nanoseconds_str, oss_pid_str); //print statement
 
 					if (execl("./worker", "worker", max_seconds_str, max_nanoseconds_str, oss_pid_str, NULL) == -1) {
 						perror("execl failed");
