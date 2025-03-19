@@ -1,6 +1,3 @@
-# Author: Tu Le
-# CS4760 Project 3
-# Date: 3/18/2025
 
 # CS4760 - Project 3: Message Passing
 **Git Repository:** [https://github.com/ananquay15x9/CS4760-P3](https://github.com/ananquay15x9/CS4760-P3.git)
