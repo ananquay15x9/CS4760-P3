@@ -242,11 +242,17 @@ int main(int argc, char **argv) {
                 		if (pid == 0) {
 					char max_seconds_str[20];
 					char max_nanoseconds_str[20];
+					char oss_pid_str[20]; //hold OSS PID
+
 					sprintf(max_seconds_str, "%d", max_seconds);
 					sprintf(max_nanoseconds_str, "%d", max_nanoseconds);
-					execl("./worker", "worker", max_seconds_str, max_nanoseconds_str, NULL);
-					perror("execl failed");
-					exit(1);
+					sprintf(oss_pid_str, "%d", oss_pid); // Convert OSS PID to string
+					printf("OSS: Executing worker with args: %s %s %s\n", max_seconds_str, max_nanoseconds_str, oss_pid_str); // Add this line
+
+					if (execl("./worker", "worker", max_seconds_str, max_nanoseconds_str, oss_pid_str, NULL) == -1) {
+						perror("execl failed");
+						exit(1);
+					}
 				} else if (pid > 0) {
 					total_processes_launched++; // increment total processes launched
 					int slot_found = 0;
@@ -293,6 +299,7 @@ int main(int argc, char **argv) {
 			while (attempts < 20) {
 				if (processTable[process_index].occupied == 1 && processTable[process_index].pid > 0) {
 					//found valid process
+				   if(processTable[process_index].occupied == 1){
 					struct oss_message oss_msg;
 					oss_msg.mtype = processTable[process_index].pid;
 					oss_msg.command = 1;
@@ -304,7 +311,8 @@ int main(int argc, char **argv) {
 					} else {
 						processTable[process_index].messagesSent++;
 					} 
-					break;
+				   }
+				   break;
 				}
 				process_index = (process_index + 1) % 20;
 				attempts++;

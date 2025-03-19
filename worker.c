@@ -29,14 +29,19 @@ struct worker_message {
 };
 
 int main(int argc, char **argv) {
-	if (argc != 3) {
-		fprintf(stderr, "Usage: %s <max_seconds> <max_nanoseconds>\n", argv[0]);
+	printf("Worker: Received args: %s %s %s\n", argv[1], argv[2], argv[3]); // Add this line
+
+	if (argc != 4) {
+		fprintf(stderr, "Usage: %s <max_seconds> <max_nanoseconds> <oss_pid>\n", argv[0]);
 		exit(1);
 	}
 
 	//Get command-line arguments
 	int max_seconds = atoi(argv[1]);
 	int max_nanoseconds = atoi(argv[2]);
+	pid_t oss_pid = atoi(argv[3]); // Get OSS PID from argument
+
+	printf("Worker: Converted args: max_seconds=%d, max_nanoseconds=%d, oss_pid=%d\n", max_seconds, max_nanoseconds, oss_pid); // Add this line
 
 	//Shared memory setup
 	key_t key = ftok("oss.c", 1); // use the same key as oss.c
@@ -84,11 +89,13 @@ int main(int argc, char **argv) {
 	while (1) {
 		// receive message from oss
 		struct oss_message oss_msg;
-		printf("Worker %d: Expecting mtype = %d\n", getpid(), getpid());
+		printf("Worker %d: Expecting mtype = %d\n", getpid(), getpid()); // expecting worker pid.
         	if (msgrcv(msgid, &oss_msg, sizeof(oss_msg) - sizeof(long), getpid(), 0) == -1) {
 			perror("msgrcv failed");
 			break;
 		}
+		printf("Worker %d: Received message with mtype = %ld\n", getpid(), oss_msg.mtype); //add this line.
+
 
 		iteration_count++;
 
@@ -106,6 +113,8 @@ int main(int argc, char **argv) {
 			worker_msg.mtype = getppid(); //OSS's PID
 			worker_msg.status = 1; // Done
 			printf("Worker %d: Sending termination message to OSS\n", getpid());
+			printf("Worker %d: Sending mtype = %ld\n", getpid(), worker_msg.mtype); //add this line.
+
 			if (msgsnd(msgid, &worker_msg, sizeof(worker_msg) - sizeof(long), 0) == -1) {
 				perror("msgsnd (termination) failed");
             		}
