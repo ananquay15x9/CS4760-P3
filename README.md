@@ -12,6 +12,7 @@ To compile this project, navigate to the project directory and run 'make' in the
 
 ```bash
 make
+```
 
 ## Running
 
@@ -27,7 +28,7 @@ To run the project, execute ./oss with the desired command-line options:
 Example:
 ```bash
 ./oss -n 2 -s 1 -t 3 -i 500 -f test1.log 
-
+```
 ## Problems Encountered and Solutions
 
 Several issues were identified and resolved:
